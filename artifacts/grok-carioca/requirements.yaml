@@ -1,0 +1,17 @@
+packages:
+  "framer-motion": "For beautiful page transitions, chat bubble animations, and modal dialogs"
+  "clsx": "Utility for conditionally joining classNames"
+  "tailwind-merge": "Utility for merging Tailwind classes safely"
+  "date-fns": "For formatting message timestamps"
+
+images:
+  - path: "artifacts/grok-carioca/public/images/grok-avatar.png"
+    description: "A fun, friendly 3D illustration of a cool robot wearing sunglasses and a colorful carnival or tropical beach shirt, Rio de Janeiro vibe, green and yellow colors, clean solid background"
+    aspect_ratio: "1:1"
+  - path: "artifacts/grok-carioca/public/images/rio-bg.png"
+    description: "Beautiful vibrant tropical beach background, Rio de Janeiro, Sugarloaf mountain at sunset, subtle carnival patterns, stylized abstract gradient mesh, very soft and visually pleasing"
+    aspect_ratio: "16:9"
+
+notes:
+  - The app uses a custom useChat hook for SSE streaming with the OpenAI proxy.
+  - Generates UI with Framer Motion for premium feel without relying on external UI libraries that may break.
