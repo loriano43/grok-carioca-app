@@ -1,4 +1,4 @@
-# Workspace
+# Workspace — Grok Carioca
 
 ## Overview
 
@@ -15,6 +15,37 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+
+## Grok Carioca App
+
+A smart local guide for Rio de Janeiro with:
+- **AI Chat** — GPT-5.2 via Replit AI with carioca English personality
+- **Map** — React Leaflet + OpenStreetMap with real-time Firebase markers
+- **Places List** — Firebase Firestore collection "locais" with filter/sort
+- **Add Place** — Form to register businesses/spots into Firebase
+
+### Frontend Pages/Components
+- `artifacts/grok-carioca/src/pages/Home.tsx` — Main tab layout
+- `artifacts/grok-carioca/src/components/ChatIA.tsx` — AI chat UI
+- `artifacts/grok-carioca/src/components/MapView.tsx` — Leaflet map
+- `artifacts/grok-carioca/src/components/AddPlaceForm.tsx` — Place registration
+- `artifacts/grok-carioca/src/components/PlacesList.tsx` — Places list with filters
+- `artifacts/grok-carioca/src/components/WeatherWidget.tsx` — Rio weather
+- `artifacts/grok-carioca/src/components/RoleSuggestion.tsx` — Random activity ideas
+- `artifacts/grok-carioca/src/services/firebase.ts` — Firebase/Firestore client
+
+### Backend Routes
+- `GET/POST /api/openai/conversations` — Chat conversation management
+- `POST /api/openai/conversations/:id/messages` — SSE streaming chat
+- `GET /api/grok-carioca/weather` — Open-Meteo weather for Rio
+- `GET /api/grok-carioca/role-suggestion` — Random activity suggestion
+
+### External Services
+- Firebase Firestore — places (collection: "locais")
+- Open-Meteo API — free weather data
+- Replit AI (OpenAI GPT-5.2) — chat completions
+
+---
 
 ## Structure
 

@@ -26,7 +26,7 @@ export function RoleSuggestion() {
         className="group relative flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-secondary to-secondary/80 text-secondary-foreground font-display font-bold text-lg rounded-2xl shadow-lg shadow-secondary/25 hover:shadow-xl hover:shadow-secondary/40 border border-secondary/20 transition-all duration-300"
       >
         <Map className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-        Sugestão de Rolê
+        What to do in Rio?
         
         {/* Sparkle effect decoration */}
         <div className="absolute -top-1 -right-1 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
@@ -59,7 +59,7 @@ export function RoleSuggestion() {
                   <X className="w-5 h-5" />
                 </button>
                 <h3 className="text-2xl font-display font-bold text-white drop-shadow-md">
-                  Bora dar um rolê?
+                  What to do in Rio? 🌊
                 </h3>
               </div>
 
@@ -68,7 +68,7 @@ export function RoleSuggestion() {
                 {isFetching ? (
                   <div className="flex flex-col items-center gap-4 text-muted-foreground">
                     <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                    <p className="font-medium animate-pulse">Perguntando pro Zéca Pagodinho...</p>
+                    <p className="font-medium animate-pulse">Asking the locals... 🤙</p>
                   </div>
                 ) : data ? (
                   <motion.div
@@ -87,7 +87,7 @@ export function RoleSuggestion() {
                     </p>
                   </motion.div>
                 ) : (
-                  <p className="text-destructive font-medium">Deu ruim, tenta de novo!</p>
+                  <p className="text-destructive font-medium">Something went wrong, try again!</p>
                 )}
               </div>
 
@@ -98,7 +98,7 @@ export function RoleSuggestion() {
                   disabled={isFetching}
                   className="text-sm font-bold text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
                 >
-                  Me dá outra ideia!
+                  Give me another idea! 🎲
                 </button>
               </div>
             </motion.div>

@@ -1,0 +1,181 @@
+I want to transform my React + TypeScript app (Grok Carioca) into a complete platform with an interactive map, business listings, and a real-time AI chat, with an English interface but Brazilian/carioca personality.
+
+OBJECTIVE:
+Build a smart local guide app (like Google Maps + ChatGPT) where users can explore places, businesses can register, and an AI assistant suggests locations.
+
+========================
+
+1. MAP (React Leaflet)
+   ========================
+
+* Implement a map using react-leaflet + OpenStreetMap
+
+* Fix any TypeScript issues (center must be [number, number])
+
+* Properly import:
+  import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+  import "leaflet/dist/leaflet.css";
+
+* Center map in Rio de Janeiro:
+  center={[-22.9, -43.2] as [number, number]}
+
+* Map size:
+  height: 400px
+  width: 100%
+
+* Display markers dynamically from Firebase
+
+========================
+2. BUSINESS REGISTRATION (Firebase)
+===================================
+
+Create a form with:
+
+* name (string)
+* category (restaurant, bar, tourism, hotel, beach)
+* description (string)
+* address (string)
+* latitude (number)
+* longitude (number)
+* phone (string)
+* image (URL or upload)
+* rating (0 to 5)
+* premium (boolean)
+
+Firebase:
+
+* Use Firestore
+* Collection name: "locais"
+* Save with auto-generated ID
+
+Map integration:
+
+* Fetch data in real-time
+
+* Display markers
+
+* Popup must include:
+
+  * name
+  * category
+  * description
+  * rating
+  * "View more" button
+
+* Highlight premium places with different marker/icon
+
+List view:
+
+* Create a list of places
+* Filter by category
+* Sort by rating
+
+========================
+3. REAL-TIME AI CHAT
+====================
+
+Create a ChatIA component with:
+
+* input field + send button
+* message history (user + AI)
+* auto scroll
+* UI similar to WhatsApp / ChatGPT
+
+AI integration:
+
+* Use an AI API (OpenAI or similar)
+* Real-time responses (streaming if possible)
+
+Personality:
+
+* Respond in English
+* Keep a Brazilian/carioca vibe
+
+Example:
+"Bro, if you want a good vibe tonight, Lapa is the move 🔥 live music, drinks, real Rio energy. Wanna check it out?"
+
+Features:
+
+* Suggest places
+* Answer user questions
+* Use Firebase data (locais collection) in responses
+
+========================
+4. ENGLISH INTERFACE (i18n)
+===========================
+
+Translate all UI:
+
+* "Cadastrar local" → "Add Place"
+
+* "Categoria" → "Category"
+
+* "Avaliação" → "Rating"
+
+* "Enviar" → "Send"
+
+* Create a translation file (i18n.ts)
+
+Optional:
+
+* Language switch (PT-BR / EN)
+* Auto-detect language
+
+========================
+5. AI AVATAR (CARIOCA STYLE)
+============================
+
+Create an avatar:
+
+* young urban carioca style
+* street + modern tech vibe
+* colors: green, black, neon
+
+Behavior:
+
+* friendly
+* confident
+* smart
+* not robotic
+
+Optional:
+
+* simple animation (pulse / talking effect using framer-motion)
+
+========================
+6. PROJECT STRUCTURE
+====================
+
+Components:
+
+* Map.tsx
+* FormCadastro.tsx
+* ListaLocais.tsx
+* ChatIA.tsx
+* AvatarIA.tsx
+
+Services:
+
+* firebase.ts
+* aiService.ts
+
+========================
+7. MOBILE + REPLIT
+==================
+
+* Ensure mobile responsiveness
+* Fix rendering issues
+* Ensure Leaflet CSS loads correctly
+
+========================
+EXTRAS (OPTIONAL)
+=================
+
+* Image upload (Firebase Storage)
+* Authentication (Firebase Auth)
+* "Suggest me something" button
+* Open suggestion directly on the map
+
+========================
+
+I want the full working code, well structured, clean, and ready to run.
