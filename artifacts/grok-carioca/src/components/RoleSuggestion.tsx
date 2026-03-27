@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Map, X, Sparkles, Loader2 } from "lucide-react";
@@ -10,50 +10,76 @@ export function RoleSuggestion() {
     query: { enabled: false },
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   const handleOpen = async () => {
     setIsOpen(true);
     await refetch();
   };
 
+  const close = () => setIsOpen(false);
+
   const modal = (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Full-screen dark overlay */}
+        /*
+         * Single fixed layer: covers the full viewport, acts as the dark
+         * overlay, AND flexbox-centers the card.  No positioning tricks
+         * are needed on the card itself, so Framer Motion can animate
+         * scale/opacity/y without any transform conflicts.
+         */
+        <motion.div
+          key="role-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={close}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 99999,
+            backgroundColor: "rgba(0,0,0,0.75)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+          }}
+        >
+          {/* Card — stop click bubbling so it doesn't close the modal */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 9998,
-              backgroundColor: "rgba(0,0,0,0.7)",
-            }}
-          />
-
-          {/* Modal card — centered, responsive */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 24 }}
+            key="role-modal-card"
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 24 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            onClick={(e) => e.stopPropagation()}
             style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              zIndex: 9999,
-              width: "min(90vw, 28rem)",
+              width: "100%",
+              maxWidth: "28rem",
+              position: "relative",
+              zIndex: 100000,
             }}
             className="bg-card rounded-3xl shadow-2xl border-2 border-border/50 overflow-hidden"
           >
             {/* Header */}
             <div className="relative h-24 bg-gradient-to-br from-primary via-accent to-secondary p-6 flex items-end">
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={close}
+                aria-label="Close modal"
                 className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-colors"
-                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -71,8 +97,9 @@ export function RoleSuggestion() {
                 </div>
               ) : data ? (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
                   className="flex flex-col items-center gap-4"
                 >
                   <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center text-4xl shadow-inner">
@@ -101,7 +128,7 @@ export function RoleSuggestion() {
               </button>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
