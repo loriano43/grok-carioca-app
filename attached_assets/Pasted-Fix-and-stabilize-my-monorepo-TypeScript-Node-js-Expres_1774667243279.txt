@@ -1,0 +1,92 @@
+Fix and stabilize my monorepo TypeScript Node.js (Express) project for Vercel deployment and ensure the AI chat works correctly.
+
+Current issues:
+
+* Build failing on Vercel (pnpm monorepo)
+* TypeScript errors:
+
+  * TS2308 duplicate exports in lib/api-zod
+  * TS2688 cannot find type definition file for 'node'
+  * TS2339 AbortError does not exist
+  * TS18048 possibly undefined values
+* Express error previously: "This expression is not callable"
+* Chat API not working (connection issues / failed fetch)
+* Vercel trying to build all workspace libraries instead of only API server
+
+Project structure:
+
+* Monorepo using pnpm workspaces
+* Main API located at: artifacts/api-server
+* Other libs:
+
+  * lib/api-zod
+  * lib/integrations-openai-ai-server
+  * others (not required for deployment)
+
+Your tasks:
+
+=== BUILD FIX ===
+
+1. Modify root package.json to ONLY build the API server:
+
+   * Use: pnpm --filter ./artifacts/api-server run build
+2. Prevent Vercel from building unused libraries
+3. Ensure build outputs correctly (dist folder)
+
+=== TYPESCRIPT FIX ===
+4. Fix tsconfig.json:
+
+* enable esModuleInterop
+* enable allowSyntheticDefaultImports
+
+5. Install and configure @types/node
+6. Fix duplicate exports in api-zod (remove or adjust conflicting exports)
+7. Fix or safely ignore AbortError type issues
+8. Ensure no blocking TypeScript errors remain
+
+=== EXPRESS FIX ===
+9. Ensure Express import works:
+import express from "express";
+import type { Express, Request, Response } from "express";
+
+=== BACKEND STABILITY ===
+10. Ensure app.ts:
+
+* uses express.json()
+* uses cors()
+* has /api routes working
+* has "/" test route returning string
+
+=== CHAT FIX ===
+11. Create working chat endpoint:
+POST /api/chat
+
+* Accepts JSON body { message: string }
+* Returns JSON response { reply: string }
+
+12. Ensure no connection errors (fix CORS and fetch compatibility)
+13. Provide fallback AI response (no external API required yet)
+
+=== VERCEL CONFIG ===
+14. Ensure project deploys with:
+
+* Framework preset: "Other"
+* Root directory: artifacts/api-server (if needed)
+
+15. Ensure no runtime errors after deployment
+
+=== OUTPUT ===
+Provide:
+
+* Fixed package.json (root)
+* Fixed tsconfig.json
+* Working app.ts
+* Working chat route
+* Any required fixes
+
+Important:
+
+* Do NOT break project structure
+* Do NOT remove core functionality
+* Focus on stability, clean build, and working deployment
+* Keep everything minimal and production-ready
