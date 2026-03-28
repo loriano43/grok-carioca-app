@@ -62,6 +62,15 @@ export default defineConfig({
     port,
     host: "0.0.0.0",
     allowedHosts: true,
+
+    // 🔥 PROXY PARA CONECTAR FRONTEND COM BACKEND
+    proxy: {
+      "/api": {
+        target: "http://0.0.0.0:8080",
+        changeOrigin: true,
+      },
+    },
+
     fs: {
       strict: true,
       deny: ["**/.*"],

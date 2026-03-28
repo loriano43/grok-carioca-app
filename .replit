@@ -15,7 +15,6 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "Project"
 
 [[workflows.workflow]]
 name = "artifacts/grok-carioca: web"
@@ -25,17 +24,6 @@ mode = "sequential"
 [workflows.workflow.metadata]
 outputType = "webview"
 artifactId = "artifacts/grok-carioca"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/grok-carioca run dev"
-cwd = "./artifacts/grok-carioca"
-waitForPort = 21916
-router = "path"
-
-[workflows.workflow.tasks.env]
-PORT = "21916"
-BASE_PATH = "/"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -93,3 +81,10 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[[ports]]
+localPort = 8080
+
+[[ports]]
+localPort = 21916
+externalPort = 80

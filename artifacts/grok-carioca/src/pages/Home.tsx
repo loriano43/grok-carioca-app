@@ -1,174 +1,253 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Map, PlusCircle, List, Sun, Moon, Sparkles } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { WeatherWidget } from "@/components/WeatherWidget";
-import { RoleSuggestion } from "@/components/RoleSuggestion";
-import { ChatIA } from "@/components/ChatIA";
-import { MapView } from "@/components/MapView";
-import { AddPlaceForm } from "@/components/AddPlaceForm";
-import { PlacesList } from "@/components/PlacesList";
-import { type Place } from "@/services/firebase";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
-type Tab = "chat" | "map" | "add" | "list";
+import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+} from "firebase/firestore";
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode; mobileLabel: string }[] = [
-  { id: "chat", label: "AI Chat", mobileLabel: "Chat", icon: <MessageSquare className="w-4 h-4" /> },
-  { id: "map", label: "Map", mobileLabel: "Map", icon: <Map className="w-4 h-4" /> },
-  { id: "list", label: "Places", mobileLabel: "Places", icon: <List className="w-4 h-4" /> },
-  { id: "add", label: "Add Place", mobileLabel: "Add", icon: <PlusCircle className="w-4 h-4" /> },
-];
+/* =========================
+   FIREBASE
+========================= */
 
-export default function Home() {
-  const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<Tab>("chat");
-  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+const firebaseConfig = {
+apiKey: "AIzaSyCoh6Swv_jo3eHSMaHcgE243B4FRM78aLA",
+  authDomain: "grok-carioca-app.firebaseapp.com",
+  projectId: "grok-carioca-app",
+  storageBucket: "grok-carioca-app.firebasestorage.app",
+  messagingSenderId: "729407683397",
+  appId: "1:729407683397:web:d0bfe0598995110faadc2c"
 
-  const handleSelectPlace = (place: Place) => {
-    setSelectedPlace(place);
-    setActiveTab("map");
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* =========================
+   TYPES
+========================= */
+
+type Place = {
+  id?: string;
+  name: string;
+  lat: number;
+  lng: number;
+  category: string;
+  rating: number;
+  price: number;
+  description: string;
+};
+
+/* =========================
+   FIX ICON
+========================= */
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+});
+
+/* =========================
+   MAP CLICK
+========================= */
+
+function MapClick({ onAdd }: { onAdd: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onAdd(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+/* =========================
+   VOZ (AVATAR)
+========================= */
+
+function speak(text: string) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "pt-BR";
+  utter.rate = 1;
+  speechSynthesis.speak(utter);
+}
+
+/* =========================
+   IA CARIOCA
+========================= */
+
+function gerarResposta(pergunta: string, places: Place[]) {
+  const texto = pergunta.toLowerCase();
+
+  if (texto.includes("bar")) {
+    const bars = places.filter((p) => p.category.includes("bar"));
+    if (!bars.length) return "Ih, ainda não tem bar cadastrado, cria um aí!";
+
+    const melhor = bars.sort((a, b) => b.rating - a.rating)[0];
+    return `Vai no ${melhor.name}, bom demais, papo reto!`;
+  }
+
+  if (texto.includes("barato")) {
+    const barato = places.sort((a, b) => a.price - b.price)[0];
+    return `Quer economizar? Cola no ${barato.name}, preço suave!`;
+  }
+
+  if (places.length) {
+    const aleatorio = places[Math.floor(Math.random() * places.length)];
+    return `Testa o ${aleatorio.name}, vibe boa demais!`;
+  }
+
+  return "Ainda não tem lugar cadastrado, bora adicionar!";
+}
+
+/* =========================
+   APP
+========================= */
+
+export default function App() {
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [selected, setSelected] = useState<any>(null);
+
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [rating, setRating] = useState(5);
+  const [price, setPrice] = useState(20);
+  const [description, setDescription] = useState("");
+
+  const [pergunta, setPergunta] = useState("");
+  const [resposta, setResposta] = useState("");
+
+  /* =========================
+     LOAD
+  ========================= */
+
+  const loadPlaces = async () => {
+    const snapshot = await getDocs(collection(db, "places"));
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Place[];
+
+    setPlaces(data);
   };
 
-  const handleAddSuccess = () => {
-    setActiveTab("list");
+  useEffect(() => {
+    loadPlaces();
+  }, []);
+
+  /* =========================
+     SAVE
+  ========================= */
+
+  const handleSave = async () => {
+    if (!selected || !name) return alert("Preencha tudo");
+
+    await addDoc(collection(db, "places"), {
+      name,
+      lat: selected.lat,
+      lng: selected.lng,
+      category,
+      rating,
+      price,
+      description,
+    });
+
+    setSelected(null);
+    setName("");
+    setCategory("");
+    setDescription("");
+
+    loadPlaces();
+  };
+
+  /* =========================
+     IA
+  ========================= */
+
+  const perguntarIA = () => {
+    const resp = gerarResposta(pergunta, places);
+    setResposta(resp);
+    speak(resp);
   };
 
   return (
-    <div className="relative min-h-screen bg-background flex flex-col font-sans overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        <img
-          src={`${import.meta.env.BASE_URL}images/rio-bg.png`}
-          alt=""
-          aria-hidden
-          className="w-full h-full object-cover opacity-20 dark:opacity-10 scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/90" />
+    <div className="h-screen flex flex-col bg-black text-white">
+
+      {/* HEADER */}
+      <div className="p-4 border-b border-white/10 flex justify-between">
+        <h1>🔥 Grok Carioca</h1>
+        <span>🤖 Avatar ativo</span>
       </div>
 
-      {/* Header */}
-      <header className="relative z-20 w-full px-4 sm:px-6 py-3 bg-background/70 backdrop-blur-xl border-b border-border/50 sticky top-0 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md">
-                <img
-                  src={`${import.meta.env.BASE_URL}images/grok-avatar.png`}
-                  alt="Grok Carioca"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-foreground leading-none flex items-center gap-1.5">
-                Grok Carioca <Sparkles className="w-3.5 h-3.5 text-primary" />
-              </h1>
-              <p className="text-[11px] text-muted-foreground font-medium">Rio's smartest local guide</p>
-            </div>
-          </div>
+      {/* MAP */}
+      <div className="flex-1">
+        <MapContainer
+          center={[-22.97, -43.18]}
+          zoom={13}
+          className="h-full"
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <MapClick onAdd={(lat, lng) => setSelected({ lat, lng })} />
 
-          {/* Weather in center */}
-          <div className="flex-1 flex justify-center">
-            <WeatherWidget />
-          </div>
-
-          {/* Right actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="hidden sm:block">
-              <RoleSuggestion />
-            </div>
-            <button
-              onClick={toggleTheme}
-              className="w-9 h-9 flex items-center justify-center rounded-xl border border-border bg-card/60 hover:bg-accent transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Role Suggestion */}
-      <div className="sm:hidden relative z-10 px-4 pt-3 flex justify-center">
-        <RoleSuggestion />
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 pt-4">
-        <div className="flex gap-1 bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl p-1.5 shadow-sm">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-sm font-semibold transition-all duration-200",
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )}
-            >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden text-xs">{tab.mobileLabel}</span>
-            </button>
+          {places.map((p) => (
+            <Marker key={p.id} position={[p.lat, p.lng]}>
+              <Popup>
+                <b>{p.name}</b>
+                <br />
+                🍽️ {p.category}
+                <br />
+                💰 R${p.price}
+                <br />
+                ⭐ {p.rating}
+                <br />
+                {p.description}
+              </Popup>
+            </Marker>
           ))}
-        </div>
+        </MapContainer>
       </div>
 
-      {/* Main Content */}
-      <main className="relative z-10 flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-8">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18 }}
-          >
-            {activeTab === "chat" && (
-              <div className="bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl p-4 sm:p-6">
-                <ChatIA />
-              </div>
-            )}
+      {/* FORM */}
+      {selected && (
+        <div className="p-3 flex flex-col gap-2 bg-black border-t border-white/10">
+          <input placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} className="p-2 bg-white/10 rounded"/>
+          <input placeholder="Categoria" value={category} onChange={(e) => setCategory(e.target.value)} className="p-2 bg-white/10 rounded"/>
+          <input type="number" placeholder="Preço" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="p-2 bg-white/10 rounded"/>
+          <input type="number" placeholder="Nota" value={rating} onChange={(e) => setRating(Number(e.target.value))} className="p-2 bg-white/10 rounded"/>
+          <input placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} className="p-2 bg-white/10 rounded"/>
 
-            {activeTab === "map" && (
-              <div className="bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl p-4 sm:p-6">
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Map className="w-5 h-5 text-primary" />
-                  Explore Rio de Janeiro
-                </h2>
-                <MapView selectedPlace={selectedPlace} />
-              </div>
-            )}
+          <button onClick={handleSave} className="bg-green-500 p-2 rounded">
+            Salvar lugar
+          </button>
+        </div>
+      )}
 
-            {activeTab === "list" && (
-              <div className="bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl p-4 sm:p-6">
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <List className="w-5 h-5 text-primary" />
-                  Places in Rio
-                </h2>
-                <PlacesList onSelectPlace={handleSelectPlace} />
-              </div>
-            )}
+      {/* IA */}
+      <div className="p-3 border-t border-white/10 flex flex-col gap-2">
+        <input
+          placeholder="Pergunta pra IA (ex: bar barato)"
+          value={pergunta}
+          onChange={(e) => setPergunta(e.target.value)}
+          className="p-2 bg-white/10 rounded"
+        />
 
-            {activeTab === "add" && (
-              <div className="bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl p-4 sm:p-6">
-                <h2 className="text-lg font-bold mb-1 flex items-center gap-2">
-                  <PlusCircle className="w-5 h-5 text-primary" />
-                  Add a Place
-                </h2>
-                <p className="text-sm text-muted-foreground mb-5">
-                  Know a great spot in Rio? Add it to the map and share it with everyone! 🌊
-                </p>
-                <AddPlaceForm onSuccess={handleAddSuccess} />
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+        <button onClick={perguntarIA} className="bg-blue-500 p-2 rounded">
+          Perguntar
+        </button>
+
+        {resposta && <p className="text-sm">🤖 {resposta}</p>}
+      </div>
     </div>
   );
 }
